@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Servidor REST
+  servidor-rest:
+    build: .
+    container_name: carrito-servidor
+    ports:
+      - "8080:8080"
+    volumes:
+      # Volumen para persistir datos
+      - datos-productos:/app/src/resources
+      # Para desarrollo: montar código fuente
+      - ./src/java:/app/src/java
+      - ./web:/app/web
+    environment:
+      - JAVA_OPTS=-Xmx256m
+    restart: unless-stopped
+
+  # Servidor web para frontend (opcional)
+  servidor-web:
+    image: nginx:alpine
+    container_name: carrito-frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./web:/usr/share/nginx/html
+    depends_on:
+      - servidor-rest
+    restart: unless-stopped
+
+  # Base de datos (opcional, para futuro)
+  # mysql:
+  #   image: mysql:8.0
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpass
+  #     MYSQL_DATABASE: carrito_db
+  #     MYSQL_USER: carrito_user
+  #     MYSQL_PASSWORD: carrito_pass
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+
+volumes:
+  datos-productos:
+  # mysql-data:

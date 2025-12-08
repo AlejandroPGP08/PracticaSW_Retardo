@@ -1,0 +1,10 @@
+[
+  {"id":1,"nombre":"Donas","precio":25.00,"stock":10},
+  {"id":2,"nombre":"Panque","precio":35.00,"stock":10},
+  {"id":3,"nombre":"Flan","precio":30.00,"stock":10},
+  {"id":4,"nombre":"Churros","precio":35.00,"stock":10},
+  {"id":5,"nombre":"Crepas","precio":40.00,"stock":10},
+  {"id":6,"nombre":"Hot cakes","precio":38.00,"stock":10},
+  {"id":7,"nombre":"Pastel","precio":30.00,"stock":10},
+  {"id":8,"nombre":"Gelatina","precio":30.00,"stock":10}
+]
