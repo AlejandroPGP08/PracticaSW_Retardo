@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
 
 public class ServidorWeb {
     private static CarritoService carritoService = new CarritoService();
@@ -22,13 +23,51 @@ public class ServidorWeb {
         }
     }
 
+    private static void servirArchivoEstatico(String path, PrintWriter out, BufferedOutputStream dataOut) {
+        try {
+            // Si la ruta es / o /index.html, servir index.html
+            if (path.equals("/") || path.equals("/index.html")) {
+                path = "index.html";
+            }
+            
+            // Leer el archivo
+            File file = new File(path);
+            if (!file.exists()) {
+                // Si no existe, enviar 404
+                out.println("HTTP/1.1 404 Not Found");
+                out.println("Content-Type: text/html");
+                out.println();
+                out.println("<h1>404 - Archivo no encontrado</h1>");
+                return;
+            }
+            
+            byte[] fileData = Files.readAllBytes(file.toPath());
+            String mimeType = Files.probeContentType(file.toPath());
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
+            }
+            
+            // Enviar respuesta HTTP
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: " + mimeType);
+            out.println("Content-Length: " + fileData.length);
+            out.println();
+            out.flush();
+            
+            // Enviar contenido del archivo
+            dataOut.write(fileData, 0, fileData.length);
+            dataOut.flush();
+            
+        } catch (IOException e) {
+            System.err.println("Error al servir archivo: " + e.getMessage());
+        }
+    }
+
     private static void manejarRequest(Socket clientSocket) throws IOException {
-        // Lee datos del cliente
         BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        // Envía datos al cliente
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+        BufferedOutputStream dataOut = new BufferedOutputStream(clientSocket.getOutputStream());
         
-        // Lee primera línea del request HTTP
         String requestLine = in.readLine();
         if (requestLine == null) {
             clientSocket.close();
@@ -36,11 +75,18 @@ public class ServidorWeb {
         }
         
         System.out.println("Request: " + requestLine);
-
-        // Divide: "GET /path HTTP/1.1"
+        
         String[] parts = requestLine.split(" ");
         String method = parts[0];
         String path = parts[1];
+        
+        // **SERVIDOR DE ARCHIVOS ESTÁTICOS**
+        if (method.equals("GET") && (path.equals("/") || path.equals("/index.html") || 
+            path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".js"))) {
+            servirArchivoEstatico(path, out, dataOut);
+            clientSocket.close();
+            return;
+        }
         
         // Leer todos los headers
         String line;
